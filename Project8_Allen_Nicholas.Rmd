@@ -1,0 +1,77 @@
+---
+title: "Project8_Allen_Nicholas"
+output: html_document
+Subject:    Project 8
+Class:      DSCI 512
+Section:    1W 24/SP2    
+Instructor: Nengbing Tao
+date: "2024-04-28"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+### 1. Load the dataset wine.csv into memory.
+```{r}
+Wines <- read.csv("C:/Users/user1/OneDrive/Documents/DSCI 512 Predictive Modelling/Week 8/wine.csv", header=T)
+
+```
+### 2. Preprocess the inputs 
+#### * a. Standardize the inputs using the scale() function.
+```{r}
+if (!require("neuralnet")) install.packages("neuralnet")
+if (!require("neuralnet")) library(neuralnet)
+#seeds allow reproducible results 
+set.seed(13)
+
+#normalize the data, all columns are already numbers, no need to drop or convert character features
+scaled.Wines =  scale(Wines)
+```
+
+
+### 2.b Convert the standardized inputs to a data frame using the as.data.frame() function.
+```{r}
+#convert to df type
+scaled.Wines = as.data.frame(scaled.Wines)
+View(scaled.Wines)
+```
+
+
+### 2.c Split the data into a training set containing 3/4 of the original data (test set containing the remaining 1/4 of the original data).
+```{r}
+index = sample(1:nrow(scaled.Wines),0.75*nrow(scaled.Wines))
+train = scaled.Wines[index,]
+test = scaled.Wines[-index,]
+```
+
+### 3. Build a neural networks model
+#### * a. The response is quality and the inputs are: volatile.acidity, density, pH, and alcohol. Please use 1 hidden layer with 1 neuron.
+```{r}
+nn.model<-neuralnet(quality~volatile.acidity+density+pH+alcohol,data=train,hidden=1)
+```
+
+
+### 3.b Plot the neural networks.
+```{r}
+plot(nn.model, rep="best")
+```
+
+
+### 3.c Forecast the wine quality in the test dataset.
+```{r}
+predict.nn = compute(nn.model, test[, c("volatile.acidity","density","pH","alcohol")])
+```
+
+### 3.d Get the observed wine quality of the test dataset.
+```{r}
+observ.test = test$quality
+```
+
+
+### 3.e Compute test error (MSE).
+```{r}
+mean((observ.test- predict.nn$net.result)^2)
+```
+
+
+
