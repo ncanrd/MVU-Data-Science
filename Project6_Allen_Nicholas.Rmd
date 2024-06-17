@@ -1,0 +1,61 @@
+---
+title: "Project4_Allen_Nicholas"
+output: html_document
+Subject:    Project 5
+Class:      DSCI 512
+Section:    1W 24/SP2    
+Instructor: Nengbing Tao
+date: "2024-04-19"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+### 1. Load the dataset bike.csv Download bike.csv into memory. Convert holiday 
+### to a factor using factor() function. Then split the data into training set 
+### containing 2/3 of the original data (test set containing remaining 1/3 of the 
+### original data).
+```{r}
+Bikes <- read.csv("C:/Users/user1/OneDrive/Documents/DSCI 512 Predictive Modelling/Week 6/Bike.csv", header=T)
+View(Bikes)
+Bikes$holiday = factor(Bikes$holiday)
+train = sample(1:nrow(Bikes), 2*nrow(Bikes)/3)
+```
+### 2. Build a support vector machine model.  
+#### * a. The response is holiday and the predictors are: season, workingday, casual, and registered. Please use svm() function with radial kernel and gamma=10 and cost = 100.
+```{r}
+if (!require("e1071")) install.packages("e1071")
+if (!require("e1071")) library(e1071)
+set.seed(13)
+svm.fit=svm(holiday~season+workingday+casual+registered,data=Bikes[train,],kernel="radial",gamma=10,cost=100)
+summary(svm.fit)
+```
+
+
+### 2.b Perform a grid search to find the best model with potential cost: 1, 10, 50, 100 and potential gamma: 1, 3, and 5 and using radial kernel and training dataset.
+```{r}
+tune.out = tune(svm,holiday~season+workingday+casual+registered,data=Bikes[train, ],kernel="radial", 
+                ranges = list(cost = c(1, 10, 50, 100), gamma= c(1, 2, 3, 5)))
+```
+
+
+### 2.c Print out the model results. What’s the best model parameters?
+```{r}
+summary(tune.out)
+```
+
+### 2.d Forecast holiday using the test dataset and the best model found in c).
+```{r}
+prediction = predict(tune.out$best.model, newdata = Bikes[-train, ])
+```
+
+### 2.e Get the true observations of holiday in the test dataset.
+```{r}
+trueObservation= Bikes[-train, "holiday"]
+```
+
+### 2.f Compute the test error by constructing the confusion matrix. Is it a good model?
+```{r}
+table(trueObservation, prediction)
+```
+The test error = (3507+6)/(3507+6+116+0)=96.8%
