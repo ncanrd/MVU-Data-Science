@@ -1,0 +1,76 @@
+---
+title: "Project4_Allen_Nicholas"
+output: html_document
+Subject:    Project 4
+Class:      DSCI 512
+Section:    1W 24/SP2    
+Instructor: Nengbing Tao
+date: "2024-04-02"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+### 1. Read the dataset in Boston.csv Download Boston.csv into R. Call the 
+### loaded data Boston. Make sure that you have the directory set to the correct
+### location for the data.2.
+```{r}
+Boston <- read.csv("C:/Users/user1/OneDrive/Documents/DSCI 512 Predictive Modelling/Week 4/Boston.csv", header=T)
+View(Boston)
+```
+### 2. The response is nox and the predictor is dis. Use the poly() function to 
+### fit a cubic polynomial regression to predict nox using dis. Report the 
+### regression output.
+```{r}
+lm2 = lm(nox ~ poly(dis,3), data = Boston)
+summary(lm2)
+```
+
+
+### 3. Your assistant data scientist, Tom Johnson, is considering predicting nox
+### using dis as a predictor. He proposes models from degree 5, degree 4, and 
+### degree 3, and degree 2 polynomial regression. Please perform cross-validation
+### using caret package to select the optimal degree for the polynomial and 
+### justify your answer.
+```{r}
+if (!require("caret")) install.packages("caret")
+if (!require("caret")) library(caret)
+#must run CV on each model (model of degree 5, of degree 4, 3, & 2)
+#going to use 10 fold cross validation 
+train_control = trainControl(method="CV", number=10)
+#seeds allow reproducible results 
+set.seed(13)
+cv5=train(nox~poly(dis,5),data=Boston,trControl=train_control, metnod="lm")
+print(cv5)  #shows the test error (looking at RMSE)
+cv4=train(nox~poly(dis,4),data=Boston,trControl=train_control, metnod="lm")
+print(cv4)  #shows the test error (looking at RMSE)
+cv3=train(nox~poly(dis,3),data=Boston,trControl=train_control, metnod="lm")
+print(cv3)  #shows the test error (looking at RMSE)
+cv2=train(nox~poly(dis,2),data=Boston,trControl=train_control, metnod="lm")
+print(cv2)  #shows the test error (looking at RMSE)
+```
+surprisingly the highest order polynomial (5th) had the lowest RMSE0.0680, barely 
+edging out the 3rd order polynomial, as the optimal order. 
+
+### 4. Tom just took the DSCI 512. You recommend that he perform the following 
+### GAM analysis.
+* Predict nox using a smoothing spline of degree 3 in dis and a smoothing spline of degree 2 in medv.
+* Predict nox using a smoothing spline of degree 2 in dis and a smoothing spline of degree 1 in medv.
+* Perform anova analysis. Recommend the best model and justify your answer.
+
+```{r}
+if (!require("gam")) install.packages("gam")
+if (!require("gam")) library(gam)
+if (!require("gamclass")) install.packages("gamclass")
+if (!require("gamclass")) library(gamclass)
+# gam(arg1 is the forumula, arg2 is the dataset
+# s indicates smoothing spline. also has 2 arguments. 1-predictor 2-degrees of freedom
+gam4a=gam(nox~s(dis,3)+s(medv,2), data=Boston)
+summary(gam4a)
+gam4b=gam(nox~s(dis,2)+s(medv,1), data=Boston)
+summary(gam4b)
+anova(gam4a,gam4b)
+```
+We look for the smallest p-value to confirm the best model. Model 2 (corresponds
+to model 4b above, the lower order splines) has the lowest p-value according to
+the analysis of variances and is therefore the best model of the 2. 
