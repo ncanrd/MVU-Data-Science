@@ -1,0 +1,47 @@
+---
+title: "Project7_Allen_Nicholas"
+output: html_document
+Subject:    Project 7
+Class:      DSCI 512
+Section:    1W 24/SP2    
+Instructor: Nengbing Tao
+date: "2024-04-23"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+### 1. Load the dataset CreditCards.csv Download CreditCards.csv into memory.
+```{r}
+CC <- read.csv("C:/Users/user1/OneDrive/Documents/DSCI 512 Predictive Modelling/Week 7/CreditCards.csv", header=T)
+View(CC)
+```
+### 2. Perform the k-means cluster analysis 
+#### * a. Remove the first column: CUST_ID since it doesn’t provide any info for cluster.
+```{r}
+if (!require("factoextra")) install.packages("factoextra")
+if (!require("factoextra")) library(factoextra)
+if (!require("cluster")) install.packages("cluster")
+if (!require("cluster")) library(cluster)
+#seeds allow reproducible results 
+set.seed(13)
+newCC=CC[-1]
+View(newCC)
+```
+
+
+### 2.b Determine the optimal number of clusters. Justify your answer. It may take longer running time since it uses a large dataset.
+```{r}
+fviz_nbclust(newCC, kmeans, method = "gap_stat")
+```
+
+
+### 2.c Perform k-means clustering using the optimal number of clusters.
+```{r}
+km.res <- kmeans(newCC, 2, nstart = 25)
+```
+
+### 2.d Visualize the clusters in different colors.
+```{r}
+fviz_cluster(km.res, data = newCC)
+```
