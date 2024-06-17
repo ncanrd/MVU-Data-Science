@@ -1,0 +1,95 @@
+---
+title: "Project2_Allen_Nicholas"
+output: html_document
+Subject:    Project 2
+Class:      DSCI 512
+Section:    1W 24/SP2    
+Instructor: Nengbing Tao
+date: "2024-03-22"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+library(readxl)
+mtcars <- read_excel("C:/Users/user1/OneDrive/Documents/DSCI 512 Predictive Modelling/Week 2/mtcars.xlsx")
+View(mtcars)
+```
+### 1. Use the lm() function to perform a simple linear regression with the 
+### response mpg and the predictor hp.
+
+```{r}
+lm.fit = lm(mpg~hp, data=mtcars)
+summary(lm.fit)
+```
+
+### 2. Is there a relationship between the target mpg and predictor hp?
+Since the p-value is far less than 5% (2.723E-09) we can say there is clear 
+evidence to reject the NULL hypothesis. This means that there is evidence of 
+a relationship between the predictor ``` hp ``` and the target ``` mpg ```.
+
+
+### 3. How strong is the relationship between the response and predictor?
+Accuracy measures can help us determine how strong the relationship is. 
+R-squared is just over 60% for us. This indicates only a mild relationship vice
+a strong relationship.
+
+
+### 4. Is the relationship between mpg and hp positive or negative?
+The relationship is negative as pointed out by the  ``` hp ``` coefficient -0.06
+
+### 5. What is the predicted mpg associated with a horsepower (hp) of 100? 
+### What’s the 95% confidence interval for the predicted mpg?
+The predicted mpg for 100 hp should be ``` 29.297928+(-0.064548)*100=22.8431 mpg
+```  
+
+The 95% confidence interval is found using 
+```{r}
+predict(lm.fit, data.frame(hp = 100), interval = "confidence")
+```
+
+### 6. Plot the response and the predictor and add the regression line using 
+### abline().
+```{r}
+plot(mtcars$hp, mtcars$mpg)
+abline(lm.fit, lwd=3, col="blue")
+```
+
+### 7. Perform a multiple linear regression with mpg as the response and the 
+### predictors cyl, disp, hp, wt, vs, and gear. Print out the results using
+### summary() function.
+```{r}
+lm.fit_mult = lm(mpg~cyl+disp+hp+wt+vs+gear, data=mtcars)
+summary(lm.fit_mult)
+```
+
+### 8. Is there a relationship between the predictors and the response?
+Since the p-value is far less than 5% (2.568E-12) we can say there is clear 
+evidence to reject the NULL hypothesis. This means that there is evidence of 
+a relationship between the predictors and the target.
+
+### 9. Which predictors appears to have a statistically significant relationship
+### to the response?
+To determine which of multiple predictors have a meaningful relationship to the
+response, we must look at the individual p values displayed for each predictor.
+These are denoted in the ```Pr(>|t|)``` column of the summary output. While 
+```hp``` is low (~2%) only ```wt``` is significantly below the 5% threshold
+(0.012%) thus we could say ```hp``` has a strong relationship in regressing 
+```mpg``` but only ```wt``` is backed up as a statistically significant 
+relationship. 
+
+### 10.  Use * symbols to fit linear regression models with interaction effects 
+### between hp and wt. Does this interaction appear to be statistically 
+### significant?
+```{r}
+lm.fit_mult2 = lm(mpg~cyl+disp+hp*wt+vs+gear, data=mtcars)
+summary(lm.fit_mult2)
+```
+Now this model seems to prove that ```hp``` does have a statistically 
+significant relationship with ```mpg```. This is due to its p value now being 
+well below 5% at 0.016% as well as the interaction between ```hp``` and 
+```wt``` also having a p value below 5% (0.11%). The p value for ```wt``` 
+decreased even further, thus confirming it still has a significant relationship 
+with ```mpg```. 
