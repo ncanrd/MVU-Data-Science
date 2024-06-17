@@ -1,0 +1,95 @@
+---
+title: "Project4_Allen_Nicholas"
+output: html_document
+Subject:    Project 5
+Class:      DSCI 512
+Section:    1W 24/SP2    
+Instructor: Nengbing Tao
+date: "2024-04-13"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+### 1. Load the dataset bike.csv Download bike.csv into memory. Then split the 
+### data into a training set containing 2/3 of the original data (test set 
+### containing remaining 1/3 of the original data).
+```{r}
+Bikes <- read.csv("C:/Users/user1/OneDrive/Documents/DSCI 512 Predictive Modelling/Week 5/Bike.csv", header=T)
+View(Bikes)
+train = sample(1:nrow(Bikes), 2*nrow(Bikes)/3)
+```
+### 2. Build a tree model using function tree(). 
+#### * a. The response is count and the predictors are season, holiday, workingday, temp, atemp, humidity, windspeed, casual, and registered.
+```{r}
+if (!require("tree")) install.packages("tree")
+if (!require("tree")) library(tree)
+set.seed(13)
+tree.Bikes=tree(count~season+holiday+workingday+temp+atemp+humidity+windspeed+casual+registered, Bikes, subset = train)
+summary(tree.Bikes)
+```
+
+
+### 2.b Perform cross-validation to choose the best tree by calling cv.tree().
+```{r}
+cv.Bikes = cv.tree(tree.Bikes)
+plot(cv.Bikes$size, cv.Bikes$dev, ttpe = 'b')
+```
+
+### 2.c Plot the model results of b) and determine the best size of the optimal tree.
+```{r}
+plot(tree.Bikes)
+text(tree.Bikes, pretty = 0)
+```
+
+### 2.d Prune the tree by calling prune.tree() function with the best size found in c).
+```{r}
+prune.Bikes = prune.tree(tree.Bikes, best =8)
+```
+
+### 2.e Plot the best tree model.
+```{r}
+plot(prune.Bikes)
+text(prune.Bikes, pretty = 0)
+```
+
+### 2.f Compute the test error using the test data set.
+```{r}
+Predictions = predict(prune.Bikes, newdata = Bikes[-train, ])
+Bikes.test = Bikes[-train, "count"]
+
+mean((Predictions-Bikes.test)^2)
+```
+
+
+
+
+
+### 3. Build a random forest model using function randomForest()
+#### * a. The response is count and the predictors are season, holiday, 
+####   workingday, temp, atemp, humidity, windspeed, casual, and registered.
+```{r}
+if (!require("randomForest")) install.packages("randomForest")
+if (!require("randomForest")) library(randomForest)
+rf.Bikes=randomForest(count~season+holiday+workingday+temp+atemp+humidity+windspeed+casual+registered,
+                       data=Bikes,subset=train,importance=TRUE)
+```
+
+
+### 3.b Compute the test error using the test data set.
+```{r}
+Predictions.rf = predict(rf.Bikes, newdata = Bikes[-train,])
+mean((Predictions.rf - Bikes.test)^2)
+```
+
+### 3.c Extract variable importance measure using importance() function.
+```{r}
+importance(rf.Bikes)
+```
+
+### 3.d Plot the variable importance using function varImpPlot(). Which are the 
+###     top 2 important predictors in this model?
+```{r}
+varImpPlot(rf.Bikes)
+```
+registered and casual are the 2 variables that make the most impact in our model
