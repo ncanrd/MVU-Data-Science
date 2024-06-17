@@ -1,0 +1,141 @@
+---
+title: "Project3_Allen_Nicholas"
+output: html_document
+Subject:    Project 3
+Class:      DSCI 512
+Section:    1W 24/SP2    
+Instructor: Nengbing Tao
+date: "2024-03-26"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+## Part I
+### 1. Load the dataset mtcars.xlsx Download mtcars.xlsx into memory and convert
+### column am to a factor using factor() function.
+```{r}
+library(readxl)
+mtcars <- read_excel("C:/Users/user1/OneDrive/Documents/DSCI 512 Predictive Modelling/Week 3/mtcars.xlsx")
+mtcars$am = factor(mtcars$am)
+View(mtcars)
+typeof(mtcars)
+```
+### 2. Split the data into training set and test set. The training set contains 
+### the first 35 observations, the test set containing the remaining observations
+```{r}
+mtcars_train = mtcars[1:35,]
+mtcars_test = mtcars[36:41,]
+```
+
+
+### 3. Build a logistic regression model with the response is am and the 
+### predictors are mpg, cyl, hp, and wt using glm() function
+```{r}
+glm.fit = glm(am~mpg+cyl+hp+wt,data=mtcars,family=binomial)
+summary(glm.fit)
+```
+
+
+### 4. Compute the test error on the test data set using a confusion matrix. 
+### Is it a good model based on test error?
+```{r}
+if (!require("caret")) install.packages("caret")
+if (!require("caret")) library(caret)
+predictions = predict(glm.fit, mtcars_test, type="response")
+View(predictions)
+for (i in 1:length(predictions)){
+  if (predictions[i]>0.5) {
+    predictions[i]="manual"
+  } 
+  else {
+    predictions[i]="automatic"
+  }
+}
+table(predictions, mtcars_test$am)
+for (i in 1:length(mtcars_test)){
+  if (mtcars_test$am[i]=='1') {
+    mtcars_test$am[i]="manual"
+  } 
+  else {
+    mtcars_test$am[i]="automatic"
+  }
+}
+
+predictions = factor(predictions)
+ConfMatrix <- confusionMatrix(data=predictions, reference = mtcars_test$am)
+View(ConfMatrix)
+```
+the table function shows 1/6 incorrect predictions or roughly a 16.7% error. 
+This is mediocre. 
+
+## Part II
+```{r}
+Bikes <- read.csv("C:/Users/user1/OneDrive/Documents/DSCI 512 Predictive Modelling/Week 3/Bike.csv", header=T)
+```
+### 1. Build a linear model to forecast number of total rentals (count) using 
+### potential predictors, season, holiday, workingday, weather, atemp, and 
+### registered.
+```{r}
+lm.fit = lm(count~season+holiday+workingday+weather+atemp+registered, data=Bikes)
+summary(lm.fit)
+```
+
+
+### 2. Perform best subset selection using bestglm() function based on BIC. 
+### What’s the best model based on BIC?
+```{r}
+if (!require("leaps")) install.packages("leaps")
+if (!require("leaps")) library(leaps)
+if (!require("bestglm")) install.packages("bestglm")
+if (!require("bestglm")) library(bestglm)
+
+Xy = Bikes[, c("season", "holiday", "weather", "temp", "atemp", "humidity", "windspeed", "casual", "registered", "count")]
+# had to remove datetime due to error, model only worked with numerics or factors
+Xy =as.data.frame(Xy)
+lm.best = bestglm(Xy, IC = "BIC")
+lm.best
+```
+Our best linear model utilizes a number of predictors. They include season,
+holiday, workingday, weather, atemp, and registered. 
+
+
+### 3. Compute the test error of the best model based on BIC using LOOCV.
+```{r}
+train_ctrl_method = trainControl(method="LOOCV")
+model3 <-train(count~ season+holiday+workingday+weather+atemp+registered,
+               data=Bikes, trControl=train_ctrl_method, method="lm")
+print(model3)
+```
+
+
+### 4. Calculate the test error of the best model based on BIC using 10-fold CV.
+```{r}
+train_ctrl_method4 = trainControl(method="CV", number=10)
+model4 <-train(count~ season+holiday+workingday+weather+atemp+registered,
+               data=Bikes, trControl=train_ctrl_method4, method="lm")
+print(model4)
+```
+
+
+### 5. Perform best subset selection using bestglm() function based on CV. 
+### What’s the best model based on CV?
+```{r}
+lm.cv = bestglm(Xy, IC = "CV")
+lm.cv
+```
+
+The cross validation method still identifies season, weather, and registered as 
+the best way to predict bike rentals. However, now the Cross Validation method
+adds in casual and the humidity as best features for prediction. 
+
+### 6.Perform the backward stepwise selection using stepAIC() function. 
+### What’s the best model?
+```{r}
+if (!require("MASS")) library(MASS)
+
+full = lm(count ~ datetime+ season+ holiday+ workingday+ weather+ temp+ atemp+ humidity+ windspeed+ casual+ registered, data = Bikes)
+lm.bwd = stepAIC(full, direction = "backward")
+lm.bwd
+```
+
